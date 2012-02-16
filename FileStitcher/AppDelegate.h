@@ -17,10 +17,13 @@
 @property (assign) IBOutlet NSTableView *tableView;
 @property (assign) IBOutlet NSScrollView *scrollView;
 @property (assign) IBOutlet NSProgressIndicator *progressIndicator;
+@property (assign) IBOutlet NSButton *btnStitchFiles;
 
 @property (retain) NSMutableArray* files;
 @property (retain) FileStitcher* fileStitcher;
 @property (retain) NSString* outputFileName;  
+@property (retain) NSArray* sortDescriptors;
+@property (assign) BOOL isStitching;
 
 - (IBAction)addFiles:(id)sender;
 - (IBAction)sortFiles:(id)sender;
@@ -29,5 +32,8 @@
 - (IBAction)clearFiles:(id)sender;
 - (IBAction)stitchFilesClick:(id)sender;
 
-- (void) addFilePathsToFiles:(NSArray*)filePaths;
+- (BOOL)performDragOperation:(id <NSDraggingInfo>)sender atTableViewRowIndex:(NSInteger)rowIndex;
+- (void) addFilePathsToFiles:(NSArray*)filePaths atIndex:(NSInteger)index;
+- (void) enableGUI:(BOOL)enable;
+- (void) sortTableView:(NSTableView*)tableView;
 @end

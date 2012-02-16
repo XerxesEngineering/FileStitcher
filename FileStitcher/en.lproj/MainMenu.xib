@@ -1323,7 +1323,7 @@
 											<string key="NSFrameSize">{482, 380}</string>
 											<reference key="NSSuperview" ref="851510717"/>
 											<reference key="NSWindow"/>
-											<reference key="NSNextKeyView" ref="678258779"/>
+											<reference key="NSNextKeyView" ref="137995016"/>
 											<bool key="NSEnabled">YES</bool>
 											<object class="NSTableHeaderView" key="NSHeaderView" id="766641754">
 												<reference key="NSNextResponder" ref="137995016"/>
@@ -1505,7 +1505,7 @@
 							<string key="NSFrame">{{20, 44}, {484, 398}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
 							<reference key="NSWindow"/>
-							<reference key="NSNextKeyView" ref="137995016"/>
+							<reference key="NSNextKeyView" ref="851510717"/>
 							<int key="NSsFlags">562</int>
 							<reference key="NSVScroller" ref="678258779"/>
 							<reference key="NSHScroller" ref="928056801"/>
@@ -1520,7 +1520,6 @@
 							<string key="NSFrame">{{506, 12}, {108, 32}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
 							<reference key="NSWindow"/>
-							<reference key="NSNextKeyView"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="290760749">
 								<int key="NSCellFlags">67239424</int>
@@ -2434,6 +2433,14 @@
 						<reference key="destination" ref="91573339"/>
 					</object>
 					<int key="connectionID">570</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">btnStitchFiles</string>
+						<reference key="source" ref="976324537"/>
+						<reference key="destination" ref="29081448"/>
+					</object>
+					<int key="connectionID">571</int>
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
@@ -3788,7 +3795,7 @@
 			<nil key="activeLocalization"/>
 			<dictionary class="NSMutableDictionary" key="localizations"/>
 			<nil key="sourceID"/>
-			<int key="maxID">570</int>
+			<int key="maxID">571</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<array class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -3830,12 +3837,17 @@
 						</object>
 					</dictionary>
 					<dictionary class="NSMutableDictionary" key="outlets">
+						<string key="btnStitchFiles">NSButton</string>
 						<string key="progressIndicator">NSProgressIndicator</string>
 						<string key="scrollView">NSScrollView</string>
 						<string key="tableView">NSTableView</string>
 						<string key="window">NSWindow</string>
 					</dictionary>
 					<dictionary class="NSMutableDictionary" key="toOneOutletInfosByName">
+						<object class="IBToOneOutletInfo" key="btnStitchFiles">
+							<string key="name">btnStitchFiles</string>
+							<string key="candidateClassName">NSButton</string>
+						</object>
 						<object class="IBToOneOutletInfo" key="progressIndicator">
 							<string key="name">progressIndicator</string>
 							<string key="candidateClassName">NSProgressIndicator</string>

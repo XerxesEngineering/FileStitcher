@@ -66,9 +66,10 @@
 
 -(void)cleanUpStream:(NSStream*)stream
 {
-    if (stream != nil)
+    if (stream)
     {
-        [stream close];
+        if (stream.streamStatus != NSStreamStatusNotOpen)
+            [stream close];
         [stream removeFromRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
         [stream release];
         stream = nil;
@@ -81,15 +82,17 @@
     self.isReadyToWrite = NO;
     
     uint8_t buffer[_bufferSize]; 
-    long bytesRead = 0;
+    NSInteger bytesRead = 0;
 
     bytesRead = [self.istream read:buffer maxLength:_bufferSize];
 
     if (bytesRead)
     {
-        [self.ostream write:buffer maxLength:_bufferSize];
+        NSInteger bytesWritten = [self.ostream write:buffer maxLength:bytesRead];
+        if (bytesWritten != bytesRead)
+            NSLog(@"Read %ld bytes, wrote %ld bytes.", bytesRead, bytesWritten);
         if (self.delegate)
-            [self.delegate performProgressStep:_bufferSize];
+            [self.delegate performProgressStep:bytesRead];
     }
     else
     {
@@ -113,6 +116,9 @@
     {
         [self cleanUpStream:self.istream];
         [self cleanUpStream:self.ostream];
+        
+        if (self.delegate)
+            [self.delegate progressComplete];
     }
 }
 
