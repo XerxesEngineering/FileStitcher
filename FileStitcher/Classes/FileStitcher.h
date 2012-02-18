@@ -9,6 +9,7 @@
 #import <Foundation/Foundation.h>
 #import "File.h"
 #import "ProgressStepDelegate.h"
+#import "NSObject+AutoDescription.h"
 
 @interface FileStitcher : NSObject <NSStreamDelegate>
 

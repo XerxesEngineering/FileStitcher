@@ -461,6 +461,7 @@
 				0A39617614650FA400376E43 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		0A39617714650FA400376E43 /* Build configuration list for PBXNativeTarget "FileStitcherTests" */ = {
 			isa = XCConfigurationList;
@@ -469,6 +470,7 @@
 				0A39617914650FA400376E43 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

@@ -42,6 +42,11 @@
     [super dealloc];
 }
 
+-(NSString*)description
+{
+    return [self autoDescription];
+}
+
 -(void)stitchFiles:(NSArray*)files toOutputFile:(File*)outFile
 {
     self.isReadyToRead = NO;

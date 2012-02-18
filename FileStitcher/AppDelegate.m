@@ -22,6 +22,26 @@
 @synthesize sortDescriptors;
 @synthesize isStitching;
 
+- (id)init
+{
+    self = [super init];
+    
+    if (self)
+    {
+        /* init files array before the app delegate methods to cover both scenarios:
+         1. When files are dropped on the app icon before launch.
+            application:openFiles:
+            applicationDidFinishLaunching:
+         2. When files are dropped on the app icon after launch.
+            applicationDidFinishLaunching:
+            application:openFiles:
+         */
+        self.files = [NSMutableArray array];
+    }
+    
+    return self;
+}
+
 - (void)dealloc
 {
     [super dealloc];
@@ -29,8 +49,6 @@
 	
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
-    self.files = [NSMutableArray array];
-    
     static NSStringCompareOptions comparisonOptions = NSCaseInsensitiveSearch | NSNumericSearch | NSWidthInsensitiveSearch | NSForcedOrderingSearch; // Finder sort options
     
     NSSortDescriptor* fileSortDescriptor = [NSSortDescriptor sortDescriptorWithKey:@"sortName" ascending:YES comparator:^NSComparisonResult(id obj1, id obj2) 
@@ -55,6 +73,12 @@
     NSArray* draggedTypes = [NSArray arrayWithObject:NSFilenamesPboardType];
     [self.window registerForDraggedTypes:draggedTypes];
     [self.tableView registerForDraggedTypes:draggedTypes];
+}
+
+-(void)application:(NSApplication *)sender openFiles:(NSArray *)filenames
+{    
+    [self addFilePathsToFiles:filenames atIndex:self.files.count];
+    [sender replyToOpenOrPrint:NSApplicationDelegateReplySuccess];
 }
 
 #pragma mark - 
@@ -326,10 +350,14 @@
                     bufferSize = (bufferSize % 2 == 0) ? bufferSize : bufferSize;
                     [self.fileStitcher release];
                     self.fileStitcher = nil;
-                    self.fileStitcher = [FileStitcher new];
-                    self.fileStitcher.bufferSize = 16*1024;
-                    self.fileStitcher.delegate = self;
-                    [self.fileStitcher stitchFiles:self.files toOutputFile:file];
+                    FileStitcher* fs = [FileStitcher new];
+                    fs.bufferSize = 16*1024;
+                    fs.delegate = self;
+                    [fs stitchFiles:self.files toOutputFile:file];
+                    NSLog(@"Retain count before prop assign: %lu", [fs retainCount]);
+                    self.fileStitcher = fs;
+                    NSLog(@"Retain count after prop assign: %lu", [fs retainCount]);
+                    [fs release];
                 }
             }
         }];
