@@ -20,6 +20,7 @@
 
 @property (assign) BOOL isReadyToRead;
 @property (assign) BOOL isReadyToWrite;
+@property (assign) BOOL isStopRequested;
 
 @property (retain) NSArray* files;
 @property (assign) int fileIndex;
@@ -28,6 +29,7 @@
 
 -(void)stitchFiles:(NSArray*)files toOutputFile:(File*)outFile;
 -(void)cleanUpStream:(NSStream*)stream;
+-(void)cleanUpAndComplete;
 -(void)concatFiles;
 -(void)goToNextFile;
 

@@ -17,6 +17,7 @@
 
 @synthesize isReadyToRead = _isReadyToRead;
 @synthesize isReadyToWrite = _isReadyToWrite;
+@synthesize isStopRequested = _isStopRequested;
 
 @synthesize files = _files;
 @synthesize fileIndex = _fileIndex;
@@ -51,6 +52,7 @@
 {
     self.isReadyToRead = NO;
     self.isReadyToWrite = NO;
+    self.isStopRequested = NO;
     
     self.fileIndex = 0;
     self.files = files;
@@ -79,6 +81,15 @@
         [stream release];
         stream = nil;
     }
+}
+
+-(void)cleanUpAndComplete
+{
+    [self cleanUpStream:self.istream];
+    [self cleanUpStream:self.ostream];
+    
+    if (self.delegate)
+        [self.delegate progressComplete];
 }
 
 -(void)concatFiles
@@ -119,11 +130,7 @@
     }
     else
     {
-        [self cleanUpStream:self.istream];
-        [self cleanUpStream:self.ostream];
-        
-        if (self.delegate)
-            [self.delegate progressComplete];
+        [self cleanUpAndComplete];
     }
 }
 
@@ -132,6 +139,12 @@
 
 - (void)stream:(NSStream *)stream handleEvent:(NSStreamEvent)eventCode
 {
+    if (self.isStopRequested)
+    {
+        [self cleanUpAndComplete];
+        return;
+    }
+    
     switch (eventCode) {
         case NSStreamEventOpenCompleted:
             if ([stream isKindOfClass:[NSOutputStream class]])

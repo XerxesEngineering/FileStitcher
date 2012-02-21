@@ -17,6 +17,9 @@
 @property (assign) IBOutlet NSTableView *tableView;
 @property (assign) IBOutlet NSScrollView *scrollView;
 @property (assign) IBOutlet NSProgressIndicator *progressIndicator;
+@property (assign) IBOutlet NSButton *btnMoveUp;
+@property (assign) IBOutlet NSButton *btnMoveDown;
+@property (assign) IBOutlet NSButton *btnRemoveFiles;
 @property (assign) IBOutlet NSButton *btnStitchFiles;
 
 @property (retain) NSMutableArray* files;
@@ -29,11 +32,14 @@
 - (IBAction)sortFiles:(id)sender;
 - (IBAction)moveUp:(id)sender;
 - (IBAction)moveDown:(id)sender;
+- (IBAction)removeFilesFromList:(id)sender;
 - (IBAction)clearFiles:(id)sender;
 - (IBAction)stitchFilesClick:(id)sender;
+- (IBAction)tableViewRowSelected:(id)sender;
 
 - (BOOL)performDragOperation:(id <NSDraggingInfo>)sender atTableViewRowIndex:(NSInteger)rowIndex;
-- (void) addFilePathsToFiles:(NSArray*)filePaths atIndex:(NSInteger)index;
-- (void) enableGUI:(BOOL)enable;
-- (void) sortTableView:(NSTableView*)tableView;
+- (void)addFilePathsToFiles:(NSArray*)filePaths atIndex:(NSInteger)index;
+- (void)enableGUI:(BOOL)enable;
+- (void)sortTableView:(NSTableView*)tableView;
+- (void)alertDidEnd:(NSAlert *)alert returnCode:(NSInteger)returnCode contextInfo:(void *)contextInfo;
 @end
