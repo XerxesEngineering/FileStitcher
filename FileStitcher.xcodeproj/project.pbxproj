@@ -223,7 +223,7 @@
 		0A39613914650FA300376E43 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0420;
+				LastUpgradeCheck = 0430;
 			};
 			buildConfigurationList = 0A39613C14650FA300376E43 /* Build configuration list for PBXProject "FileStitcher" */;
 			compatibilityVersion = "Xcode 3.2";

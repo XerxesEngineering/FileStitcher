@@ -17,9 +17,11 @@
 @property (assign) IBOutlet NSTableView *tableView;
 @property (assign) IBOutlet NSScrollView *scrollView;
 @property (assign) IBOutlet NSProgressIndicator *progressIndicator;
+@property (assign) IBOutlet NSButton *btnSortFiles;
 @property (assign) IBOutlet NSButton *btnMoveUp;
 @property (assign) IBOutlet NSButton *btnMoveDown;
 @property (assign) IBOutlet NSButton *btnRemoveFiles;
+@property (assign) IBOutlet NSButton *btnClearFiles;
 @property (assign) IBOutlet NSButton *btnStitchFiles;
 
 @property (retain) NSMutableArray* files;
@@ -40,6 +42,7 @@
 - (BOOL)performDragOperation:(id <NSDraggingInfo>)sender atTableViewRowIndex:(NSInteger)rowIndex;
 - (void)addFilePathsToFiles:(NSArray*)filePaths atIndex:(NSInteger)index;
 - (void)enableGUI:(BOOL)enable;
+- (void)enableFileButtons:(BOOL)enable;
 - (void)sortTableView:(NSTableView*)tableView;
 - (void)alertDidEnd:(NSAlert *)alert returnCode:(NSInteger)returnCode contextInfo:(void *)contextInfo;
 @end

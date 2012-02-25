@@ -14,10 +14,13 @@
 @synthesize tableView = _tableView;
 @synthesize scrollView = _scrollView;
 @synthesize progressIndicator = _progressIndicator;
+@synthesize btnSortFiles = _btnSortFiles;
 @synthesize btnMoveUp = _btnMoveUp;
 @synthesize btnMoveDown = _btnMoveDown;
-@synthesize btnStitchFiles = _btnStitchFiles;
 @synthesize btnRemoveFiles = _btnRemoveFiles;
+@synthesize btnClearFiles = _btnClearFiles;
+@synthesize btnStitchFiles = _btnStitchFiles;
+
 
 @synthesize files;
 @synthesize fileStitcher;
@@ -151,6 +154,8 @@
     
     [self.files insertObjects:newFiles atIndexes:newFileIndexes];    
     [self.tableView reloadData];
+    
+    [self enableFileButtons:(self.files.count > 0)];
 }
 
 - (void)enableGUI:(BOOL)enable
@@ -170,6 +175,13 @@
     self.btnStitchFiles.title = (enable) ? @"Stitch Files" : @"Stop";
 }
 
+- (void)enableFileButtons:(BOOL)enable
+{
+    [self.btnSortFiles setEnabled:enable];
+    [self.btnClearFiles setEnabled:enable];
+    [self.btnStitchFiles setEnabled:enable];
+}
+
 - (void)sortTableView:(NSTableView*)tableView
 {
     [self.files sortUsingDescriptors:tableView.sortDescriptors];
@@ -186,16 +198,13 @@
 
 -(id)tableView:(NSTableView*)aTableView objectValueForTableColumn:(NSTableColumn*)aTableColumn row:(NSInteger)rowIndex
 {
+    File* file = [self.files objectAtIndex:rowIndex];
+    
     if ([aTableColumn.identifier isEqualToString:@"0"])
-    {
-        File* file = [self.files objectAtIndex:rowIndex];
         return file.name;
-    }
     else if ([aTableColumn.identifier isEqualToString:@"1"])
-    {
-        File* file = [self.files objectAtIndex:rowIndex];
         return file.displaySize;
-    }
+
     return nil;
 }
 
@@ -206,16 +215,13 @@
 
 - (NSString *)tableView:(NSTableView *)aTableView toolTipForCell:(NSCell *)aCell rect:(NSRectPointer)rect tableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex mouseLocation:(NSPoint)mouseLocation
 {
+    File* file = [self.files objectAtIndex:rowIndex];
+    
     if ([aTableColumn.identifier isEqualToString:@"0"])
-    {
-        File* file = [self.files objectAtIndex:rowIndex];
         return file.path;
-    }
     else if ([aTableColumn.identifier isEqualToString:@"1"])
-    {
-        File* file = [self.files objectAtIndex:rowIndex];
         return [NSString stringWithFormat:@"%ld bytes", file.bytes];
-    }
+
     return nil;
 }
 
@@ -311,12 +317,15 @@
     [self.files removeObjectsAtIndexes:[self.tableView selectedRowIndexes]];
     [self.tableView reloadData];
     [self tableViewRowSelected:sender]; // handle last file removed
+    [self enableFileButtons:(self.files.count > 0)];
 }
 
 - (IBAction)clearFiles:(id)sender 
 {
     [self.files removeAllObjects];
     [self.tableView reloadData];
+    [self tableViewRowSelected:sender]; 
+    [self enableFileButtons:NO];
 }
 
 - (IBAction)stitchFilesClick:(id)sender 
