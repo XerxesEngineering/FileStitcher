@@ -252,7 +252,12 @@
     {
         if (result == NSFileHandlingPanelOKButton)
         {
-            NSArray* filePaths = [openPanel filenames];
+            NSArray* fileURLs = [openPanel URLs];
+            NSMutableArray* filePaths = [NSMutableArray arrayWithCapacity:fileURLs.count];
+            [fileURLs enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+                NSURL* fileURL = (NSURL*)obj;
+                [filePaths addObject:fileURL.path];
+            }];
             [self addFilePathsToFiles:filePaths atIndex:self.files.count];
         }
     }];
@@ -372,16 +377,13 @@
                     [self enableGUI:NO];
                     int bufferSize = maxValue / [self.files count];
                     bufferSize = (bufferSize % 2 == 0) ? bufferSize : bufferSize;
-                    [self.fileStitcher release];
-                    self.fileStitcher = nil;
-                    FileStitcher* fs = [FileStitcher new];
-                    fs.bufferSize = 16*1024;
-                    fs.delegate = self;
-                    [fs stitchFiles:self.files toOutputFile:file];
-                    NSLog(@"Retain count before prop assign: %lu", [fs retainCount]);
-                    self.fileStitcher = fs;
-                    NSLog(@"Retain count after prop assign: %lu", [fs retainCount]);
-                    [fs release];
+                    if (!self.fileStitcher)
+                    {
+                        self.fileStitcher = [FileStitcher new];
+                        self.fileStitcher.bufferSize = 16*1024;
+                        self.fileStitcher.delegate = self;
+                    }
+                    [self.fileStitcher stitchFiles:self.files toOutputFile:file];
                 }
             }
         }];
@@ -406,7 +408,7 @@
     if (okFlag)
     {
         NSSavePanel* panel = (NSSavePanel*)sender;
-        self.outputFileName = panel.filename;
+        self.outputFileName = panel.URL.path;
         return @"*"; // invalid filename to avoid the "replace" prompt
     }
     else

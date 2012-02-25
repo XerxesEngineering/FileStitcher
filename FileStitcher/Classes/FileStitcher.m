@@ -39,6 +39,8 @@
 {
     [self cleanUpStream:_istream];
     [self cleanUpStream:_ostream];
+    [_istream release];
+    [_ostream release];
     [_files release];
     [super dealloc];
 }
@@ -57,8 +59,7 @@
     self.fileIndex = 0;
     self.files = files;
     
-    File* firstFile = [self.files objectAtIndex:0];
-    
+    File* firstFile = [self.files objectAtIndex:0];    
        
     self.istream = [[NSInputStream alloc] initWithFileAtPath:firstFile.path];
     [self.istream setDelegate:self];
@@ -78,15 +79,13 @@
         if (stream.streamStatus != NSStreamStatusNotOpen)
             [stream close];
         [stream removeFromRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
-        [stream release];
-        stream = nil;
     }
 }
 
 -(void)cleanUpAndComplete
 {
-    [self cleanUpStream:self.istream];
-    [self cleanUpStream:self.ostream];
+    [self cleanUpStream:_istream];
+    [self cleanUpStream:_ostream];
     
     if (self.delegate)
         [self.delegate progressComplete];
@@ -172,8 +171,8 @@
             
         case NSStreamEventErrorOccurred:
             NSLog(@"Error");
-            [self cleanUpStream:self.istream];
-            [self cleanUpStream:self.ostream];
+            [self cleanUpStream:_istream];
+            [self cleanUpStream:_ostream];
         default:
             break;
     }
