@@ -13,16 +13,16 @@
 
 @interface FileStitcher : NSObject <NSStreamDelegate>
 
-@property (assign) id<ProgressStepDelegate> delegate;
+@property (unsafe_unretained) id<ProgressStepDelegate> delegate;
 
-@property (retain) NSInputStream* istream;
-@property (retain) NSOutputStream* ostream;
+@property (strong) NSInputStream* istream;
+@property (strong) NSOutputStream* ostream;
 
 @property (assign) BOOL isReadyToRead;
 @property (assign) BOOL isReadyToWrite;
 @property (assign) BOOL isStopRequested;
 
-@property (retain) NSArray* files;
+@property (strong) NSArray* files;
 @property (assign) int fileIndex;
 
 @property (assign) int bufferSize;

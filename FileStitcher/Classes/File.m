@@ -8,66 +8,78 @@
 
 #import "File.h"
 
+static dispatch_queue_t path_accessor_queue()
+{
+    static dispatch_queue_t _path_accessor_queue;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        _path_accessor_queue = dispatch_queue_create("com.xerxesengineering.FileStitcher.File.path_accessor_queue", DISPATCH_QUEUE_SERIAL);
+    });
+    
+    return  _path_accessor_queue;
+}
+
+#pragma mark -
+
 @interface File ()
 
-@property (readwrite, retain) NSString* name;
-@property (readwrite, retain) NSString* sortName;
-@property (readwrite, retain) NSString* displaySize;
+@property (readwrite, strong) NSString* name;
+@property (readwrite, strong) NSString* sortName;
+@property (readwrite, strong) NSString* displaySize;
 @property (readwrite, assign) unsigned long long bytes;
 
 @end
 
 @implementation File
 
-@synthesize name;
-@synthesize sortName;
-@synthesize displaySize;
-@synthesize bytes;
-
 + (File*)fileWithPath:(NSString*)filePath
 {
     File* file = [File new];
     file.path = filePath;
-    return [file autorelease];
+    return file;
+}
+
++ (NSSet *)keyPathsForValuesAffectingPath
+{
+    return [NSSet setWithObjects:
+            NSStringFromSelector(@selector(name)),
+            NSStringFromSelector(@selector(sortName)),
+            NSStringFromSelector(@selector(bytes)),
+            NSStringFromSelector(@selector(displaySize)),
+            nil];
 }
 
 - (NSString*)path
 {
-    id result;
-    @synchronized(path)
-    {
-        result = [[path retain] autorelease];
-    }
+    __block id result;
+    dispatch_sync(path_accessor_queue(), ^{
+        result = _path;
+    });
     return result;
 }
 
-- (void)setPath:(NSString*)filePath
+- (void)setPath:(NSString*)path
 {
-    @synchronized(self)
-    {
-        if (path != filePath)
-        {
-            [path release];
-            
+    dispatch_sync(path_accessor_queue(), ^{
+        if (_path != path) {
             NSFileManager* fileMgr = [NSFileManager defaultManager];
             NSError* fileError;
             
-            NSDictionary* fileAttr = [fileMgr attributesOfItemAtPath:filePath error:&fileError];
-            NSNumber* fileExtensionHidden = [fileAttr objectForKey:NSFileExtensionHidden];
+            NSDictionary* fileAttr = [fileMgr attributesOfItemAtPath:path error:&fileError];
+            NSNumber* fileExtensionHidden = fileAttr[NSFileExtensionHidden];
             
-//                if (fileError != nil)
-//                {
-//                    NSLog(@"Error reading file (%@) attr: %@", filePath, fileError.localizedDescription);
+//                if (fileError != nil) {
+//                    NSLog(@"Error reading file (%@) attr: %@", path, fileError.localizedDescription);
 //                    return NO;
 //                }
             
-            path = [filePath retain];
-            self.name = [fileMgr displayNameAtPath:path];
-            self.sortName = [fileExtensionHidden boolValue] ? name : [name stringByDeletingPathExtension];
+            _path = path;
+            self.name = [fileMgr displayNameAtPath:_path];
+            self.sortName = [fileExtensionHidden boolValue] ? _name : [_name stringByDeletingPathExtension];
             self.bytes = [fileAttr fileSize];
-            self.displaySize = [NSString stringWithFormat:@"%.2f MB", bytes/1000000.0];
+            self.displaySize = [NSString stringWithFormat:@"%.2f MB", _bytes/1000000.0];
         }
-    }
+    });
 }
 
 -(NSString*)description

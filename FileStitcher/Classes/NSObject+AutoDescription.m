@@ -16,8 +16,7 @@
 	
 	// Find Out something about super Classes
 	Class superClass  = class_getSuperclass(classType);
-	if  ( superClass != nil && ![superClass isEqual:[NSObject class]])
-	{
+	if  (superClass != nil && ![superClass isEqual:[NSObject class]]) {
 		// Append all the super class's properties to the result (Reqursive, until NSObject) 
 		[result appendString:[self autoDescriptionForClassType:superClass]];
 	}
@@ -32,7 +31,7 @@
 		// For Eeach property we are loading its name
 		const char * property_name = property_getName(property);
 		
-		NSString * propertyName = [NSString stringWithCString:property_name encoding:NSASCIIStringEncoding];
+		NSString * propertyName = @(property_name);
 		if (propertyName) { // and if name is ok, we are getting value using KVC
 			id value = [self valueForKey:propertyName];
 			

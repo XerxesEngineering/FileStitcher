@@ -8,32 +8,15 @@
 
 #import "AppDelegate.h"
 
+static NSString* const kFileStitcherPasteboardTableViewType = @"FileStitcherPasteboardTableViewType";
+
 @implementation AppDelegate
-
-@synthesize window = _window;
-@synthesize tableView = _tableView;
-@synthesize scrollView = _scrollView;
-@synthesize progressIndicator = _progressIndicator;
-@synthesize btnSortFiles = _btnSortFiles;
-@synthesize btnMoveUp = _btnMoveUp;
-@synthesize btnMoveDown = _btnMoveDown;
-@synthesize btnRemoveFiles = _btnRemoveFiles;
-@synthesize btnClearFiles = _btnClearFiles;
-@synthesize btnStitchFiles = _btnStitchFiles;
-
-
-@synthesize files;
-@synthesize fileStitcher;
-@synthesize outputFileName;
-@synthesize sortDescriptors;
-@synthesize isStitching;
 
 - (id)init
 {
     self = [super init];
     
-    if (self)
-    {
+    if (self) {
         /* init files array before the app delegate methods to cover both scenarios:
          1. When files are dropped on the app icon before launch.
             application:openFiles:
@@ -48,17 +31,11 @@
     return self;
 }
 
-- (void)dealloc
-{
-    [super dealloc];
-}
-	
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
     static NSStringCompareOptions comparisonOptions = NSCaseInsensitiveSearch | NSNumericSearch | NSWidthInsensitiveSearch | NSForcedOrderingSearch; // Finder sort options
     
-    NSSortDescriptor* fileSortDescriptor = [NSSortDescriptor sortDescriptorWithKey:@"sortName" ascending:YES comparator:^NSComparisonResult(id obj1, id obj2) 
-     {
+    NSSortDescriptor* fileSortDescriptor = [NSSortDescriptor sortDescriptorWithKey:@"sortName" ascending:YES comparator:^NSComparisonResult(id obj1, id obj2) {
          NSRange obj1Range = NSMakeRange(0, [obj1 length]);
          return [obj1 compare:obj2 options:comparisonOptions range:obj1Range locale:[NSLocale currentLocale]];
      }];
@@ -71,23 +48,42 @@
     NSTableColumn* sizeColumn = [self.tableView tableColumnWithIdentifier:@"1"];
     [sizeColumn setSortDescriptorPrototype:sizeSortDescriptor];
     
-    self.sortDescriptors = [NSArray arrayWithObjects:fileSortDescriptor, sizeSortDescriptor, nil];
+    self.sortDescriptors = @[fileSortDescriptor, sizeSortDescriptor];
     
     // smooths out the animation - http://www.cocoabuilder.com/archive/cocoa/242344-determinate-nsprogressindicator-animation.html
     [self.progressIndicator setUsesThreadedAnimation:YES];
     
-    NSArray* draggedTypes = [NSArray arrayWithObject:NSFilenamesPboardType];
-    [self.window registerForDraggedTypes:draggedTypes];
-    [self.tableView registerForDraggedTypes:draggedTypes];
+    [self.window registerForDraggedTypes:@[NSFilenamesPboardType]];
+    [self.tableView registerForDraggedTypes:@[NSFilenamesPboardType, kFileStitcherPasteboardTableViewType]];
 }
 
 -(void)application:(NSApplication *)sender openFiles:(NSArray *)filenames
 {    
-    [self addFilePathsToFiles:filenames atIndex:self.files.count];
+    [self addFilePathsToFiles:filenames atIndex:self.files.count withAnimation:NSTableViewAnimationSlideDown];
     [sender replyToOpenOrPrint:NSApplicationDelegateReplySuccess];
 }
 
-#pragma mark - 
+#pragma mark - KVC for files property
+
+- (void)insertFiles:(NSArray *)array atIndexes:(NSIndexSet *)indexes
+{
+    [self.files insertObjects:array atIndexes:indexes];
+    [self invalidateFiles];
+}
+
+- (void)removeFilesAtIndexes:(NSIndexSet *)indexes
+{
+    [self.files removeObjectsAtIndexes:indexes];
+    [self invalidateFiles];
+}
+
+- (void)invalidateFiles
+{
+    [self.files setValue:@(NO) forKey:NSStringFromSelector(@selector(processed))];
+    [self.tableView reloadDataForRowIndexes:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, self.files.count)] columnIndexes:[NSIndexSet indexSetWithIndex:(self.tableView.numberOfColumns-1)]];
+}
+
+#pragma mark -
 #pragma mark NSDraggingInfo Protocol
 
 - (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender 
@@ -95,16 +91,15 @@
     NSPasteboard *pboard = [sender draggingPasteboard];
     NSDragOperation sourceDragMask = [sender draggingSourceOperationMask];
     
-    if ([[pboard types] containsObject:NSFilenamesPboardType]) 
-    {
-        if (sourceDragMask & NSDragOperationLink) 
-        {
+    if ([[pboard types] containsObject:NSFilenamesPboardType]) {
+        if (sourceDragMask & NSDragOperationLink) {
             return NSDragOperationLink;
         } 
-        //        else if (sourceDragMask & NSDragOperationCopy) 
-        //        {
+        //        else if (sourceDragMask & NSDragOperationCopy) {
         //            return NSDragOperationCopy;
         //        }
+    } else if ([[pboard types] containsObject:kFileStitcherPasteboardTableViewType]) {
+        return NSDragOperationEvery;
     }
     
     return NSDragOperationNone;
@@ -123,37 +118,76 @@
     NSPasteboard *pboard = [sender draggingPasteboard];
     NSDragOperation sourceDragMask = [sender draggingSourceOperationMask];
     
-    if ([[pboard types] containsObject:NSFilenamesPboardType]) 
-    {
+    if ([[pboard types] containsObject:NSFilenamesPboardType]) {
         // Depending on the dragging source and modifier keys,
         // the file data may be copied or linked
-        if (sourceDragMask & NSDragOperationLink) 
-        {
+        if (sourceDragMask & NSDragOperationLink) {
             NSArray* filePaths = [pboard propertyListForType:NSFilenamesPboardType];
-            [self addFilePathsToFiles:filePaths atIndex:rowIndex];
+            [self addFilePathsToFiles:filePaths atIndex:rowIndex withAnimation:NSTableViewAnimationEffectGap];
+            return YES;
         } 
-        //        else 
-        //        {
+        //        else {
         //            [self addDataFromFiles:files];
         //        }
+    } else if ([[pboard types] containsObject:kFileStitcherPasteboardTableViewType]) {
+        NSData* dragRowData = [pboard dataForType:kFileStitcherPasteboardTableViewType];
+        NSIndexSet* dragRowIndexes = [NSKeyedUnarchiver unarchiveObjectWithData:dragRowData];
+        NSRange dropRowRange = NSMakeRange(rowIndex, dragRowIndexes.count);
+        NSIndexSet* dropRowIndexes = [NSIndexSet indexSetWithIndexesInRange:dropRowRange];
+        NSInteger dragRow = [dragRowIndexes firstIndex];
+        
+        // drag down
+        if (dragRow < rowIndex) {
+            NSArray* dragFiles = [self.files objectsAtIndexes:dragRowIndexes];
+            [self.tableView beginUpdates];
+            [self insertFiles:dragFiles atIndexes:dropRowIndexes];
+//            [self.files insertObjects:dragFiles atIndexes:dropRowIndexes];
+//            [self.files removeObjectsAtIndexes:dragRowIndexes];
+            [self removeFilesAtIndexes:dragRowIndexes];
+            NSIndexSet* reloadIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(dragRow, dropRowIndexes.lastIndex - dragRow)];
+            [self.tableView reloadDataForRowIndexes:reloadIndexes columnIndexes:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, self.tableView.numberOfColumns)]];
+            [self.tableView endUpdates];
+            NSUInteger dragRowIndexesLessThanDropRowIndex = [dragRowIndexes countOfIndexesInRange:NSMakeRange(0, rowIndex)];
+            NSIndexSet* selectRowIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(rowIndex - dragRowIndexesLessThanDropRowIndex, dragRowIndexes.count)];
+            [self.tableView selectRowIndexes:selectRowIndexes byExtendingSelection:NO];
+            return YES;
+        // drag up
+        } else  if (dragRow > rowIndex) {
+            NSArray* dragFiles = [self.files objectsAtIndexes:dragRowIndexes];
+            [self.tableView beginUpdates];
+            [self removeFilesAtIndexes:dragRowIndexes];
+//            [self.files removeObjectsAtIndexes:dragRowIndexes];
+//            [self.files insertObjects:dragFiles atIndexes:dropRowIndexes];
+            [self insertFiles:dragFiles atIndexes:dropRowIndexes];
+            NSIndexSet* reloadIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(rowIndex, dragRowIndexes.lastIndex - rowIndex)];
+            [self.tableView reloadDataForRowIndexes:reloadIndexes columnIndexes:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, self.tableView.numberOfColumns)]];
+            [self.tableView endUpdates];
+            [self.tableView selectRowIndexes:dropRowIndexes byExtendingSelection:NO];
+            return YES;
+        }
+        
+//         NSData* rowData = [pboard dataForType:MyPrivateTableViewDataType];
+//        NSIndexSet* rowIndexes = [NSKeyedUnarchiver unarchiveObjectWithData:rowData]; NSInteger dragRow = [rowIndexes firstIndex]; // Move the specified row to its new location... // if we remove a row then everything moves down by one // so do an insert prior to the delete // --- depends which way were moving the data!!! if (dragRow < row) { [nsAryOfDataValues insertObject: [nsAryOfDataValues objectAtIndex:dragRow] atIndex:row]; [nsAryOfDataValues removeObjectAtIndex:dragRow]; [self.nsTableViewObj noteNumberOfRowsChanged]; [self.nsTableViewObj reloadData]; return YES; } // end if MyData * zData = [nsAryOfDataValues objectAtIndex:dragRow]; [nsAryOfDataValues removeObjectAtIndex:dragRow]; [nsAryOfDataValues insertObject:zData atIndex:row]; [self.nsTableViewObj noteNumberOfRowsChanged]; [self.nsTableViewObj reloadData]; return YES;
     }
     
-    return YES;
+    return NO;
 }
 
-- (void)addFilePathsToFiles:(NSArray*)filePaths atIndex:(NSInteger)index
+- (void)addFilePathsToFiles:(NSArray*)filePaths atIndex:(NSInteger)index withAnimation:(NSTableViewAnimationOptions)animationOptions
 {
     NSMutableArray* newFiles = [NSMutableArray arrayWithCapacity:filePaths.count];
     NSIndexSet* newFileIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(index, filePaths.count)];
     
-    for (NSString* filePath in filePaths)
-    {
-        File* file= [File fileWithPath:filePath];
+    for (NSString* filePath in filePaths) {
+        File* file = [File fileWithPath:filePath];
         [newFiles addObject:file];
     }
     
-    [self.files insertObjects:newFiles atIndexes:newFileIndexes];    
-    [self.tableView reloadData];
+    [self.tableView beginUpdates];
+//    [self.files insertObjects:newFiles atIndexes:newFileIndexes];
+    [self insertFiles:newFiles atIndexes:newFileIndexes];
+    [self.tableView insertRowsAtIndexes:newFileIndexes withAnimation:animationOptions];
+    [self.tableView endUpdates];
     
     [self enableFileButtons:(self.files.count > 0)];
 }
@@ -162,10 +196,8 @@
 {
     [self.tableView setEnabled:enable];
     
-    for (NSView* view in [[self.window contentView] subviews])
-    {
-        if ([view isKindOfClass:[NSButton class]])
-        {
+    for (NSView* view in [[self.window contentView] subviews]) {
+        if ([view isKindOfClass:[NSButton class]]) {
             NSButton* button = (NSButton*)view;
             if (![button isEqualTo:self.btnStitchFiles])
                 [button setEnabled:enable];
@@ -185,6 +217,7 @@
 - (void)sortTableView:(NSTableView*)tableView
 {
     [self.files sortUsingDescriptors:tableView.sortDescriptors];
+    [self invalidateFiles];
     [tableView reloadData];
 }
 
@@ -198,12 +231,14 @@
 
 -(id)tableView:(NSTableView*)aTableView objectValueForTableColumn:(NSTableColumn*)aTableColumn row:(NSInteger)rowIndex
 {
-    File* file = [self.files objectAtIndex:rowIndex];
+    File* file = (self.files)[rowIndex];
     
     if ([aTableColumn.identifier isEqualToString:@"0"])
         return file.name;
     else if ([aTableColumn.identifier isEqualToString:@"1"])
         return file.displaySize;
+    else if ([aTableColumn.identifier isEqualToString:@"2"])
+        return file.isProcessed ? [NSImage imageNamed:NSImageNameStatusAvailable /* [NSImage imageNamed:@"check32" */ /*NSImageNameMenuOnStateTemplate*/ /*NSImageNameStatusAvailable*/] : [NSImage imageNamed:NSImageNameStatusNone];
 
     return nil;
 }
@@ -215,14 +250,26 @@
 
 - (NSString *)tableView:(NSTableView *)aTableView toolTipForCell:(NSCell *)aCell rect:(NSRectPointer)rect tableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex mouseLocation:(NSPoint)mouseLocation
 {
-    File* file = [self.files objectAtIndex:rowIndex];
+    File* file = (self.files)[rowIndex];
     
     if ([aTableColumn.identifier isEqualToString:@"0"])
         return file.path;
     else if ([aTableColumn.identifier isEqualToString:@"1"])
-        return [NSString stringWithFormat:@"%ld bytes", file.bytes];
+        return [NSString stringWithFormat:@"%llu bytes", file.bytes];
+    else if ([aTableColumn.identifier isEqualToString:@"2"])
+        return (file.isProcessed) ? @"Stitched" : @"Not yet stitched";
 
     return nil;
+}
+
+// Table row dragging started
+- (BOOL)tableView:(NSTableView *)tableView writeRowsWithIndexes:(NSIndexSet *)rowIndexes toPasteboard:(NSPasteboard *)pboard
+{
+    NSData* rowData = [NSKeyedArchiver archivedDataWithRootObject:rowIndexes];
+    [pboard declareTypes:@[kFileStitcherPasteboardTableViewType] owner:self];
+    [pboard setData:rowData forType:kFileStitcherPasteboardTableViewType];
+    
+    return YES;
 }
 
 - (NSDragOperation)tableView:(NSTableView *)aTableView validateDrop:(id <NSDraggingInfo>)info proposedRow:(NSInteger)row proposedDropOperation:(NSTableViewDropOperation)operation
@@ -244,25 +291,17 @@
 - (IBAction)addFiles:(id)sender 
 {
     NSOpenPanel* openPanel = [NSOpenPanel openPanel];
-    [openPanel retain];
     
     [openPanel setAllowsMultipleSelection:YES];
     
-    [openPanel beginWithCompletionHandler:^(NSInteger result) 
-    {
-        if (result == NSFileHandlingPanelOKButton)
-        {
+    [openPanel beginWithCompletionHandler:^(NSInteger result) {
+        if (result == NSFileHandlingPanelOKButton) {
             NSArray* fileURLs = [openPanel URLs];
-            NSMutableArray* filePaths = [NSMutableArray arrayWithCapacity:fileURLs.count];
-            [fileURLs enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
-                NSURL* fileURL = (NSURL*)obj;
-                [filePaths addObject:fileURL.path];
-            }];
-            [self addFilePathsToFiles:filePaths atIndex:self.files.count];
+            NSArray* filePaths = [fileURLs valueForKey:NSStringFromSelector(@selector(path))];
+            [self addFilePathsToFiles:filePaths atIndex:self.files.count withAnimation:NSTableViewAnimationEffectFade];
         }
     }];
     
-    [openPanel release];
 }
 
 - (IBAction)sortFiles:(id)sender 
@@ -276,19 +315,18 @@
 - (IBAction)moveUp:(id)sender 
 {
     NSIndexSet* selectedIndexes = [self.tableView selectedRowIndexes];
+    [self invalidateFiles];
     
-    if (selectedIndexes.firstIndex > 0)
-    {
+    if (selectedIndexes.firstIndex > 0) {
         NSMutableIndexSet* newSelectedIndexes = [NSMutableIndexSet indexSet];
         
-        [selectedIndexes enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL *stop) 
-        {
+        [selectedIndexes enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL *stop) {
             [self.files exchangeObjectAtIndex:idx withObjectAtIndex:idx-1];
             [newSelectedIndexes addIndex:idx-1];
         }];
         
         NSIndexSet* reloadIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(newSelectedIndexes.firstIndex, selectedIndexes.lastIndex + 1)];
-        NSIndexSet* columnIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, [self.tableView numberOfColumns])];
+        NSIndexSet* columnIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, self.tableView.numberOfColumns)];
         
         [self.tableView reloadDataForRowIndexes:reloadIndexes columnIndexes:columnIndexes];
         [self.tableView selectRowIndexes:newSelectedIndexes byExtendingSelection:NO];
@@ -298,19 +336,18 @@
 - (IBAction)moveDown:(id)sender 
 {
     NSIndexSet* selectedIndexes = [self.tableView selectedRowIndexes];
+    [self invalidateFiles];
     
-    if (selectedIndexes.lastIndex < self.files.count - 1)
-    {
+    if (selectedIndexes.lastIndex < self.files.count - 1) {
         NSMutableIndexSet* newSelectedIndexes = [NSMutableIndexSet indexSet];
         
-        [selectedIndexes enumerateIndexesWithOptions:NSEnumerationReverse usingBlock:^(NSUInteger idx, BOOL *stop) 
-         {
+        [selectedIndexes enumerateIndexesWithOptions:NSEnumerationReverse usingBlock:^(NSUInteger idx, BOOL *stop) {
              [self.files exchangeObjectAtIndex:idx withObjectAtIndex:idx+1];
              [newSelectedIndexes addIndex:idx+1];
          }];
         
         NSIndexSet* reloadIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(selectedIndexes.firstIndex, newSelectedIndexes.lastIndex + 1)];
-        NSIndexSet* columnIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, [self.tableView numberOfColumns])];
+        NSIndexSet* columnIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, self.tableView.numberOfColumns)];
         
         [self.tableView reloadDataForRowIndexes:reloadIndexes columnIndexes:columnIndexes];
         [self.tableView selectRowIndexes:newSelectedIndexes byExtendingSelection:NO];
@@ -319,8 +356,11 @@
 
 - (IBAction)removeFilesFromList:(id)sender
 {    
-    [self.files removeObjectsAtIndexes:[self.tableView selectedRowIndexes]];
+//    [self.files removeObjectsAtIndexes:[self.tableView selectedRowIndexes]];
+    [self.tableView beginUpdates];
+    [self removeFilesAtIndexes:self.tableView.selectedRowIndexes];
     [self.tableView reloadData];
+    [self.tableView endUpdates];
     [self tableViewRowSelected:sender]; // handle last file removed
     [self enableFileButtons:(self.files.count > 0)];
 }
@@ -335,50 +375,33 @@
 
 - (IBAction)stitchFilesClick:(id)sender 
 {
-    if (self.isStitching)
-    {
+    if (self.isStitching) {
         self.fileStitcher.isStopRequested = YES;
-    }
-    else
-    {
-        __block double maxValue = 0.0;
-        
-        [self.files enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) 
-        {
-            File* file = (File*)obj;
-            maxValue += file.bytes;
-        }];
-        
+    } else {
+        NSNumber* maxValue = [self.files valueForKeyPath:@"@sum.bytes"];
         self.progressIndicator.doubleValue = 0.0;
-        self.progressIndicator.maxValue = maxValue;
+        self.progressIndicator.maxValue = maxValue.doubleValue;
+        
+        [self invalidateFiles];
         
         NSSavePanel* savePanel = [NSSavePanel savePanel];
-        [savePanel retain];
         [savePanel setDelegate:self];
         [savePanel setExtensionHidden:NO];
         [savePanel setAllowsOtherFileTypes:YES];
         [savePanel setCanSelectHiddenExtension:YES];
         
-        
         [savePanel beginWithCompletionHandler:^(NSInteger result) {
-            if (result == NSFileHandlingPanelOKButton)
-            {
+            if (result == NSFileHandlingPanelOKButton) {
                 savePanel.title = savePanel.title;
                 File* file = [File fileWithPath:self.outputFileName];
-                if ([self.files containsObject:file])
-                {
+                if ([self.files containsObject:file]) {
                     NSAlert* alert = [NSAlert alertWithMessageText:@"Oh no!" defaultButton:@"OK" alternateButton:nil otherButton:nil informativeTextWithFormat:@"I can't save to the file (%@) when you have it as one of the input files in the list. Remove the file from the list or save to a different file.", file.name];
                     [alert setAlertStyle:NSCriticalAlertStyle];
                     [alert beginSheetModalForWindow:self.window modalDelegate:nil didEndSelector:nil contextInfo:NULL];
-                }
-                else
-                {
+                } else {
                     self.isStitching = YES;
                     [self enableGUI:NO];
-                    int bufferSize = maxValue / [self.files count];
-                    bufferSize = (bufferSize % 2 == 0) ? bufferSize : bufferSize;
-                    if (!self.fileStitcher)
-                    {
+                    if (!self.fileStitcher) {
                         self.fileStitcher = [FileStitcher new];
                         self.fileStitcher.bufferSize = 16*1024;
                         self.fileStitcher.delegate = self;
@@ -387,8 +410,6 @@
                 }
             }
         }];
-        
-        [savePanel release];
     }
 }
 
@@ -405,14 +426,11 @@
 
 - (NSString*)panel:(id)sender userEnteredFilename:(NSString*)filename confirmed:(BOOL)okFlag
 {
-    if (okFlag)
-    {
+    if (okFlag) {
         NSSavePanel* panel = (NSSavePanel*)sender;
         self.outputFileName = panel.URL.path;
         return @"*"; // invalid filename to avoid the "replace" prompt
-    }
-    else
-    {
+    } else {
         return filename;
     }
 }
@@ -420,23 +438,33 @@
 #pragma mark -
 #pragma mark ProgressStepDelegate Protocol
 
--(void)performProgressStep:(double)progressStep
+-(void)updateProgressPercentage:(double)percentage
 {
-    [self.progressIndicator incrementBy:progressStep];
+    [self.progressIndicator incrementBy:percentage];
+}
+
+-(void)performProgressStep:(NSInteger)step
+{
+    [self.tableView reloadDataForRowIndexes:[NSIndexSet indexSetWithIndex:step] columnIndexes:[NSIndexSet indexSetWithIndex:(self.tableView.numberOfColumns-1)]];
 }
 
 -(void)progressComplete
 {
     self.isStitching = NO;
     [self enableGUI:YES];
-    if (self.fileStitcher.fileIndex < self.fileStitcher.files.count)
-    {
-        File* file = [self.fileStitcher.files objectAtIndex:self.fileStitcher.fileIndex];
-        NSAlert* alert = [NSAlert alertWithMessageText:@"Incomplete File" defaultButton:@"Yes" alternateButton:@"No" otherButton:nil informativeTextWithFormat:@"The saved file is incomplete. The last partial file copied to the output file was a portion of \"%@\", file %d of %d in the list.\r\n\r\nTrash the incomplete file, \"%@\"?", file.name, self.fileStitcher.fileIndex + 1, self.fileStitcher.files.count, [self.outputFileName lastPathComponent]];
+    [self tableViewRowSelected:nil];
+    if (self.fileStitcher.fileIndex < self.fileStitcher.files.count) {
+        File* file = (self.fileStitcher.files)[self.fileStitcher.fileIndex];
+        NSAlert* alert = [NSAlert alertWithMessageText:@"Incomplete File" defaultButton:@"Yes" alternateButton:@"No" otherButton:nil informativeTextWithFormat:@"The saved file is incomplete. The last partial file copied to the output file was a portion of \"%@\", file %d of %lu in the list.\r\n\r\nTrash the incomplete file, \"%@\"?", file.name, self.fileStitcher.fileIndex + 1, (unsigned long)self.fileStitcher.files.count, [self.outputFileName lastPathComponent]];
         [alert setAlertStyle:NSWarningAlertStyle];
         [alert setIcon:[[NSWorkspace sharedWorkspace] iconForFileType:NSFileTypeForHFSTypeCode(kFullTrashIcon)]];
         [alert beginSheetModalForWindow:self.window modalDelegate:self didEndSelector:@selector(alertDidEnd:returnCode:contextInfo:) contextInfo:NULL];
     }
+//    else {
+//        NSAlert* alert = [NSAlert alertWithMessageText:@"Complete" defaultButton:@"OK" alternateButton:nil otherButton:nil informativeTextWithFormat:@"Your files have been stitched togther."];
+//        [alert setAlertStyle:NSInformationalAlertStyle];
+//        [alert beginSheetModalForWindow:self.window modalDelegate:nil didEndSelector:nil contextInfo:NULL];
+//    }
 }
 
 #pragma mark -
@@ -444,9 +472,8 @@
 
 -(void)alertDidEnd:(NSAlert *)alert returnCode:(NSInteger)returnCode contextInfo:(void *)contextInfo
 {
-    if (returnCode == NSAlertDefaultReturn)
-    {
-        [[NSWorkspace sharedWorkspace] performFileOperation:NSWorkspaceRecycleOperation source:[self.outputFileName stringByDeletingLastPathComponent] destination:@"" files:[NSArray arrayWithObject:[self.outputFileName lastPathComponent]] tag:nil];        
+    if (returnCode == NSAlertDefaultReturn) {
+        [[NSWorkspace sharedWorkspace] performFileOperation:NSWorkspaceRecycleOperation source:[self.outputFileName stringByDeletingLastPathComponent] destination:@"" files:@[[self.outputFileName lastPathComponent]] tag:nil];        
     }
 }
 

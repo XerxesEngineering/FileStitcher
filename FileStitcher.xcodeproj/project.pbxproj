@@ -20,6 +20,8 @@
 		0A39617D1465108D00376E43 /* FileStitcher.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A39617C1465108D00376E43 /* FileStitcher.m */; };
 		0A396188146677CB00376E43 /* File.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A396187146677CB00376E43 /* File.m */; };
 		0A3961EB1466814400376E43 /* NSObject+AutoDescription.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A3961EA1466814400376E43 /* NSObject+AutoDescription.m */; };
+		0A43DA0718C9CCE40062C536 /* check.png in Resources */ = {isa = PBXBuildFile; fileRef = 0A43DA0618C9CCE40062C536 /* check.png */; };
+		0A43DA0918C9CDB40062C536 /* check32.png in Resources */ = {isa = PBXBuildFile; fileRef = 0A43DA0818C9CDB40062C536 /* check32.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -59,6 +61,8 @@
 		0A3961E91466814400376E43 /* NSObject+AutoDescription.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSObject+AutoDescription.h"; path = "Classes/NSObject+AutoDescription.h"; sourceTree = "<group>"; };
 		0A3961EA1466814400376E43 /* NSObject+AutoDescription.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSObject+AutoDescription.m"; path = "Classes/NSObject+AutoDescription.m"; sourceTree = "<group>"; };
 		0A3961EC14668F2D00376E43 /* ProgressStepDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ProgressStepDelegate.h; path = Classes/ProgressStepDelegate.h; sourceTree = "<group>"; };
+		0A43DA0618C9CCE40062C536 /* check.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = check.png; sourceTree = "<group>"; };
+		0A43DA0818C9CDB40062C536 /* check32.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = check32.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -136,6 +140,8 @@
 		0A39614D14650FA300376E43 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				0A43DA0818C9CDB40062C536 /* check32.png */,
+				0A43DA0618C9CCE40062C536 /* check.png */,
 				0A39614E14650FA300376E43 /* FileStitcher-Info.plist */,
 				0A39614F14650FA300376E43 /* InfoPlist.strings */,
 				0A39615214650FA300376E43 /* main.m */,
@@ -249,8 +255,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0A43DA0918C9CDB40062C536 /* check32.png in Resources */,
 				0A39615114650FA300376E43 /* InfoPlist.strings in Resources */,
 				0A39615714650FA300376E43 /* Credits.rtf in Resources */,
+				0A43DA0718C9CCE40062C536 /* check.png in Resources */,
 				0A39615D14650FA400376E43 /* MainMenu.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -409,10 +417,11 @@
 		0A39617514650FA400376E43 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_ARC = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "FileStitcher/FileStitcher-Prefix.pch";
 				INFOPLIST_FILE = "FileStitcher/FileStitcher-Info.plist";
-				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				MACOSX_DEPLOYMENT_TARGET = 10.6.8;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
@@ -421,10 +430,11 @@
 		0A39617614650FA400376E43 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_ARC = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "FileStitcher/FileStitcher-Prefix.pch";
 				INFOPLIST_FILE = "FileStitcher/FileStitcher-Info.plist";
-				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				MACOSX_DEPLOYMENT_TARGET = 10.6.8;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
@@ -434,10 +444,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/FileStitcher.app/Contents/MacOS/FileStitcher";
+				CLANG_ENABLE_OBJC_ARC = YES;
 				FRAMEWORK_SEARCH_PATHS = "$(DEVELOPER_LIBRARY_DIR)/Frameworks";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "FileStitcher/FileStitcher-Prefix.pch";
 				INFOPLIST_FILE = "FileStitcherTests/FileStitcherTests-Info.plist";
+				MACOSX_DEPLOYMENT_TARGET = 10.6.8;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_HOST = "$(BUNDLE_LOADER)";
 				WRAPPER_EXTENSION = octest;
@@ -448,10 +460,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/FileStitcher.app/Contents/MacOS/FileStitcher";
+				CLANG_ENABLE_OBJC_ARC = YES;
 				FRAMEWORK_SEARCH_PATHS = "$(DEVELOPER_LIBRARY_DIR)/Frameworks";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "FileStitcher/FileStitcher-Prefix.pch";
 				INFOPLIST_FILE = "FileStitcherTests/FileStitcherTests-Info.plist";
+				MACOSX_DEPLOYMENT_TARGET = 10.6.8;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_HOST = "$(BUNDLE_LOADER)";
 				WRAPPER_EXTENSION = octest;

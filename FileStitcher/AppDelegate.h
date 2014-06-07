@@ -13,21 +13,21 @@
 
 @interface AppDelegate : NSObject <NSApplicationDelegate, NSTableViewDelegate, NSTableViewDataSource, ProgressStepDelegate, NSOpenSavePanelDelegate>
 
-@property (assign) IBOutlet NSWindow *window;
-@property (assign) IBOutlet NSTableView *tableView;
-@property (assign) IBOutlet NSScrollView *scrollView;
-@property (assign) IBOutlet NSProgressIndicator *progressIndicator;
-@property (assign) IBOutlet NSButton *btnSortFiles;
-@property (assign) IBOutlet NSButton *btnMoveUp;
-@property (assign) IBOutlet NSButton *btnMoveDown;
-@property (assign) IBOutlet NSButton *btnRemoveFiles;
-@property (assign) IBOutlet NSButton *btnClearFiles;
-@property (assign) IBOutlet NSButton *btnStitchFiles;
+@property (unsafe_unretained) IBOutlet NSWindow *window;
+@property (unsafe_unretained) IBOutlet NSTableView *tableView;
+@property (unsafe_unretained) IBOutlet NSScrollView *scrollView;
+@property (unsafe_unretained) IBOutlet NSProgressIndicator *progressIndicator;
+@property (unsafe_unretained) IBOutlet NSButton *btnSortFiles;
+@property (unsafe_unretained) IBOutlet NSButton *btnMoveUp;
+@property (unsafe_unretained) IBOutlet NSButton *btnMoveDown;
+@property (unsafe_unretained) IBOutlet NSButton *btnRemoveFiles;
+@property (unsafe_unretained) IBOutlet NSButton *btnClearFiles;
+@property (unsafe_unretained) IBOutlet NSButton *btnStitchFiles;
 
-@property (retain) NSMutableArray* files;
-@property (retain) FileStitcher* fileStitcher;
-@property (retain) NSString* outputFileName;  
-@property (retain) NSArray* sortDescriptors;
+@property (strong) NSMutableArray* files;
+@property (strong) FileStitcher* fileStitcher;
+@property (strong) NSString* outputFileName;  
+@property (strong) NSArray* sortDescriptors;
 @property (assign) BOOL isStitching;
 
 - (IBAction)addFiles:(id)sender;
@@ -39,10 +39,10 @@
 - (IBAction)stitchFilesClick:(id)sender;
 - (IBAction)tableViewRowSelected:(id)sender;
 
-- (BOOL)performDragOperation:(id <NSDraggingInfo>)sender atTableViewRowIndex:(NSInteger)rowIndex;
-- (void)addFilePathsToFiles:(NSArray*)filePaths atIndex:(NSInteger)index;
-- (void)enableGUI:(BOOL)enable;
-- (void)enableFileButtons:(BOOL)enable;
-- (void)sortTableView:(NSTableView*)tableView;
-- (void)alertDidEnd:(NSAlert *)alert returnCode:(NSInteger)returnCode contextInfo:(void *)contextInfo;
+//- (BOOL)performDragOperation:(id<NSDraggingInfo>)sender atTableViewRowIndex:(NSInteger)rowIndex;
+//- (void)addFilePathsToFiles:(NSArray*)filePaths atIndex:(NSInteger)index;
+//- (void)enableGUI:(BOOL)enable;
+//- (void)enableFileButtons:(BOOL)enable;
+//- (void)sortTableView:(NSTableView*)tableView;
+//- (void)alertDidEnd:(NSAlert *)alert returnCode:(NSInteger)returnCode contextInfo:(void *)contextInfo;
 @end

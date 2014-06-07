@@ -11,14 +11,15 @@
 
 @interface File : NSObject
 {
-    NSString* path;
+    NSString* _path;
 }
 
-@property (retain) NSString* path;
-@property (retain, readonly) NSString* name;
-@property (retain, readonly) NSString* sortName;
-@property (retain, readonly) NSString* displaySize;
+@property (strong) NSString* path;
+@property (strong, readonly) NSString* name;
+@property (strong, readonly) NSString* sortName;
+@property (strong, readonly) NSString* displaySize;
 @property (assign, readonly) unsigned long long bytes;
+@property (assign, getter = isProcessed) BOOL processed;
 
 + (File*)fileWithPath:(NSString*)filePath;
 

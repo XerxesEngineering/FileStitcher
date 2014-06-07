@@ -10,25 +10,10 @@
 
 @implementation FileStitcher
 
-@synthesize delegate = _delegate;
-
-@synthesize istream = _istream;
-@synthesize ostream = _ostream;
-
-@synthesize isReadyToRead = _isReadyToRead;
-@synthesize isReadyToWrite = _isReadyToWrite;
-@synthesize isStopRequested = _isStopRequested;
-
-@synthesize files = _files;
-@synthesize fileIndex = _fileIndex;
-
-@synthesize bufferSize = _bufferSize;
-
 -(id)init
 {
     self = [super init];
-    if (self)
-    {
+    if (self) {
         _bufferSize = 4096; // disk page size is 4K
     }
     
@@ -39,10 +24,6 @@
 {
     [self cleanUpStream:_istream];
     [self cleanUpStream:_ostream];
-    [_istream release];
-    [_ostream release];
-    [_files release];
-    [super dealloc];
 }
 
 -(NSString*)description
@@ -59,7 +40,7 @@
     self.fileIndex = 0;
     self.files = files;
     
-    File* firstFile = [self.files objectAtIndex:0];    
+    File* firstFile = (self.files)[0];    
        
     self.istream = [[NSInputStream alloc] initWithFileAtPath:firstFile.path];
     [self.istream setDelegate:self];
@@ -74,8 +55,7 @@
 
 -(void)cleanUpStream:(NSStream*)stream
 {
-    if (stream)
-    {
+    if (stream) {
         if (stream.streamStatus != NSStreamStatusNotOpen)
             [stream close];
         [stream removeFromRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
@@ -101,34 +81,33 @@
 
     bytesRead = [self.istream read:buffer maxLength:_bufferSize];
 
-    if (bytesRead)
-    {
+    if (bytesRead) {
         NSInteger bytesWritten = [self.ostream write:buffer maxLength:bytesRead];
         if (bytesWritten != bytesRead)
             NSLog(@"Read %ld bytes, wrote %ld bytes.", bytesRead, bytesWritten);
         if (self.delegate)
-            [self.delegate performProgressStep:bytesRead];
-    }
-    else
-    {
+            [self.delegate updateProgressPercentage:bytesRead];
+    } else {
         NSLog(@"Buffer is empty.");
     }
-
 }
 
 -(void)goToNextFile
 {    
-    if (++self.fileIndex < [self.files count])
-    {
+    if (self.delegate)
+        [self.delegate performProgressStep:self.fileIndex];
+    
+    File* oldFile = self.files[self.fileIndex];
+    oldFile.processed = YES;
+    
+    if (++self.fileIndex < [self.files count]) {
         self.isReadyToWrite = YES; // Must do this to keep things moving
-        File* file = [self.files objectAtIndex:self.fileIndex];
+        File* file = (self.files)[self.fileIndex];
         self.istream = [[NSInputStream alloc] initWithFileAtPath:file.path];
         [self.istream setDelegate:self];
         [self.istream scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
         [self.istream open];
-    }
-    else
-    {
+    } else {
         [self cleanUpAndComplete];
     }
 }
@@ -138,16 +117,14 @@
 
 - (void)stream:(NSStream *)stream handleEvent:(NSStreamEvent)eventCode
 {
-    if (self.isStopRequested)
-    {
+    if (self.isStopRequested) {
         [self cleanUpAndComplete];
         return;
     }
     
     switch (eventCode) {
         case NSStreamEventOpenCompleted:
-            if ([stream isKindOfClass:[NSOutputStream class]])
-            {
+            if ([stream isKindOfClass:[NSOutputStream class]]) {
                 [self.istream open];
             }
             break;
