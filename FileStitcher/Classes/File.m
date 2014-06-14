@@ -13,7 +13,7 @@ static dispatch_queue_t path_accessor_queue()
     static dispatch_queue_t _path_accessor_queue;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        _path_accessor_queue = dispatch_queue_create("com.xerxesengineering.FileStitcher.File.path_accessor_queue", DISPATCH_QUEUE_SERIAL);
+        _path_accessor_queue = dispatch_queue_create([NSString stringWithFormat:@"%@.File.path_accessor_queue", [[NSBundle mainBundle].infoDictionary objectForKey:(id)kCFBundleIdentifierKey]].UTF8String, DISPATCH_QUEUE_SERIAL);
     });
     
     return  _path_accessor_queue;

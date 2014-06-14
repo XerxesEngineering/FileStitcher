@@ -10,6 +10,8 @@
 #import "File.h"
 #import "ProgressStepDelegate.h"
 #import "NSObject+AutoDescription.h"
+#import <CoreServices/CoreServices.h>
+#import <Availability.h>
 
 @interface FileStitcher : NSObject <NSStreamDelegate>
 

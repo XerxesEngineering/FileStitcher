@@ -443,8 +443,8 @@ static NSString* const kFileStitcherPasteboardTableViewType = @"FileStitcherPast
     if (![[NSThread currentThread] isEqualTo:[NSThread mainThread]]) {
         [self performSelectorOnMainThread:@selector(updateProgressPercentage:) withObject:percentage waitUntilDone:NO];
         return;
-}
-
+    }
+    
     [self.progressIndicator incrementBy:percentage.doubleValue];
 }
 
