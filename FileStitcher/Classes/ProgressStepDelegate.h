@@ -10,8 +10,8 @@
 
 @protocol ProgressStepDelegate <NSObject>
 
--(void)updateProgressPercentage:(double)percentage;
--(void)performProgressStep:(NSInteger)step;
+-(void)updateProgressPercentage:(NSNumber*)percentage;
+-(void)performProgressStep:(NSNumber*)step;
 -(void)progressComplete;
 
 @end

@@ -86,7 +86,7 @@
         if (bytesWritten != bytesRead)
             NSLog(@"Read %ld bytes, wrote %ld bytes.", bytesRead, bytesWritten);
         if (self.delegate)
-            [self.delegate updateProgressPercentage:bytesRead];
+            [self.delegate updateProgressPercentage:@(bytesRead)];
     } else {
         NSLog(@"Buffer is empty.");
     }
@@ -95,7 +95,7 @@
 -(void)goToNextFile
 {    
     if (self.delegate)
-        [self.delegate performProgressStep:self.fileIndex];
+        [self.delegate performProgressStep:@(self.fileIndex)];
     
     File* oldFile = self.files[self.fileIndex];
     oldFile.processed = YES;

@@ -438,18 +438,33 @@ static NSString* const kFileStitcherPasteboardTableViewType = @"FileStitcherPast
 #pragma mark -
 #pragma mark ProgressStepDelegate Protocol
 
--(void)updateProgressPercentage:(double)percentage
+-(void)updateProgressPercentage:(NSNumber*)percentage
 {
-    [self.progressIndicator incrementBy:percentage];
+    if (![[NSThread currentThread] isEqualTo:[NSThread mainThread]]) {
+        [self performSelectorOnMainThread:@selector(updateProgressPercentage:) withObject:percentage waitUntilDone:NO];
+        return;
 }
 
--(void)performProgressStep:(NSInteger)step
+    [self.progressIndicator incrementBy:percentage.doubleValue];
+}
+
+-(void)performProgressStep:(NSNumber*)step
 {
-    [self.tableView reloadDataForRowIndexes:[NSIndexSet indexSetWithIndex:step] columnIndexes:[NSIndexSet indexSetWithIndex:(self.tableView.numberOfColumns-1)]];
+    if (![[NSThread currentThread] isEqualTo:[NSThread mainThread]]) {
+        [self performSelectorOnMainThread:@selector(performProgressStep:) withObject:step waitUntilDone:NO];
+        return;
+    }
+    
+    [self.tableView reloadDataForRowIndexes:[NSIndexSet indexSetWithIndex:step.unsignedIntegerValue] columnIndexes:[NSIndexSet indexSetWithIndex:(self.tableView.numberOfColumns-1)]];
 }
 
 -(void)progressComplete
 {
+    if (![[NSThread currentThread] isEqualTo:[NSThread mainThread]]) {
+        [self performSelectorOnMainThread:@selector(progressComplete) withObject:nil waitUntilDone:NO];
+        return;
+    }
+    
     self.isStitching = NO;
     [self enableGUI:YES];
     [self tableViewRowSelected:nil];
