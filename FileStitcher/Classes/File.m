@@ -27,6 +27,7 @@ static dispatch_queue_t path_accessor_queue()
 @property (readwrite, strong) NSString* sortName;
 @property (readwrite, strong) NSString* displaySize;
 @property (readwrite, assign) unsigned long long bytes;
+@property (readwrite, strong) NSNumber* blockSize;
 
 @end
 
@@ -45,6 +46,7 @@ static dispatch_queue_t path_accessor_queue()
             NSStringFromSelector(@selector(name)),
             NSStringFromSelector(@selector(sortName)),
             NSStringFromSelector(@selector(bytes)),
+            NSStringFromSelector(@selector(blockSize)),
             NSStringFromSelector(@selector(displaySize)),
             nil];
 }
@@ -68,6 +70,10 @@ static dispatch_queue_t path_accessor_queue()
             NSDictionary* fileAttr = [fileMgr attributesOfItemAtPath:path error:&fileError];
             NSNumber* fileExtensionHidden = fileAttr[NSFileExtensionHidden];
             
+            NSNumber* blockSize;
+            NSURL* folderURL = [[NSURL alloc] initFileURLWithPath:[path stringByDeletingLastPathComponent]]; // get the containing folder, as the file may not exist
+            [folderURL getResourceValue:&blockSize forKey:NSURLPreferredIOBlockSizeKey error:nil];
+            
 //                if (fileError != nil) {
 //                    NSLog(@"Error reading file (%@) attr: %@", path, fileError.localizedDescription);
 //                    return NO;
@@ -77,6 +83,7 @@ static dispatch_queue_t path_accessor_queue()
             self.name = [fileMgr displayNameAtPath:_path];
             self.sortName = [fileExtensionHidden boolValue] ? _name : [_name stringByDeletingPathExtension];
             self.bytes = [fileAttr fileSize];
+            self.blockSize = blockSize;
             self.displaySize = [NSString stringWithFormat:@"%.2f MB", _bytes/1000000.0];
         }
     });

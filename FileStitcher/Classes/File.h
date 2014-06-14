@@ -19,6 +19,7 @@
 @property (strong, readonly) NSString* sortName;
 @property (strong, readonly) NSString* displaySize;
 @property (assign, readonly) unsigned long long bytes;
+@property (strong, readonly) NSNumber* blockSize;
 @property (assign, getter = isProcessed) BOOL processed;
 
 + (File*)fileWithPath:(NSString*)filePath;
