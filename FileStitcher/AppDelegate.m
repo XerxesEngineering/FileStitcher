@@ -376,7 +376,7 @@ static NSString* const kFileStitcherPasteboardTableViewType = @"FileStitcherPast
 - (IBAction)stitchFilesClick:(id)sender 
 {
     if (self.isStitching) {
-        self.fileStitcher.isStopRequested = YES;
+        self.fileStitcher.stopRequested = YES;
     } else {
         NSNumber* maxValue = [self.files valueForKeyPath:@"@sum.bytes"];
         self.progressIndicator.doubleValue = 0.0;

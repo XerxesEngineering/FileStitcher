@@ -18,9 +18,9 @@
 @property (strong) NSInputStream* istream;
 @property (strong) NSOutputStream* ostream;
 
-@property (assign) BOOL isReadyToRead;
-@property (assign) BOOL isReadyToWrite;
-@property (assign) BOOL isStopRequested;
+@property (assign, getter = isReadyToRead) BOOL readyToRead;
+@property (assign, getter = isReadyToWrite) BOOL readyToWrite;
+@property (assign, getter = isStopRequested) BOOL stopRequested;
 
 @property (strong) NSArray* files;
 @property (assign) int fileIndex;

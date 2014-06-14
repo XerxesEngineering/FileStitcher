@@ -33,9 +33,9 @@
 
 -(void)stitchFiles:(NSArray*)files toOutputFile:(File*)outFile
 {
-    self.isReadyToRead = NO;
-    self.isReadyToWrite = NO;
-    self.isStopRequested = NO;
+    self.readyToRead = NO;
+    self.readyToWrite = NO;
+    self.stopRequested = NO;
     
     self.fileIndex = 0;
     self.files = files;
@@ -73,8 +73,8 @@
 
 -(void)concatFiles
 {
-    self.isReadyToRead = NO;
-    self.isReadyToWrite = NO;
+    self.readyToRead = NO;
+    self.readyToWrite = NO;
     
     uint8_t buffer[_bufferSize]; 
     NSInteger bytesRead = 0;
@@ -101,7 +101,7 @@
     oldFile.processed = YES;
     
     if (++self.fileIndex < [self.files count]) {
-        self.isReadyToWrite = YES; // Must do this to keep things moving
+        self.readyToWrite = YES; // Must do this to keep things moving
         File* file = (self.files)[self.fileIndex];
         self.istream = [[NSInputStream alloc] initWithFileAtPath:file.path];
         [self.istream setDelegate:self];
@@ -130,13 +130,13 @@
             break;
             
         case NSStreamEventHasBytesAvailable:
-            self.isReadyToRead = YES;
+            self.readyToRead = YES;
             if (self.isReadyToWrite)
                 [self concatFiles];
             break;
         
         case NSStreamEventHasSpaceAvailable:
-            self.isReadyToWrite = YES;
+            self.readyToWrite = YES;
             if (self.isReadyToRead)
                 [self concatFiles];
             break;
