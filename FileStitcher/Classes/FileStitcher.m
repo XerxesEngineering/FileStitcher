@@ -47,7 +47,7 @@
     Gestalt(gestaltSystemVersionMajor, &systemMajorVersion);
     Gestalt(gestaltSystemVersionMinor, &systemMinorVersion);
     
-    if (systemMajorVersion == 10 & systemMinorVersion < 7) {
+    if (systemMajorVersion == 10 && systemMinorVersion < 7) {
         File* firstFile = (self.files)[0];
         
         self.istream = [NSInputStream inputStreamWithFileAtPath:firstFile.path];
